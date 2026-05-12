@@ -138,7 +138,7 @@ jobs:
           DATABASE_URL: postgres://conduit:conduit_test@localhost:5432/conduit_test?sslmode=disable
           REDIS_URL: redis://localhost:6379
           GO_ENV: test
-        run: cd services/auth && go test -v -race -coverprofile=coverage.out ./...
+        run: cd services/auth && go test -v -race ./...
 
   test-job:
     name: Test / job
@@ -183,7 +183,7 @@ jobs:
           DATABASE_URL: postgres://conduit:conduit_test@localhost:5432/conduit_test?sslmode=disable
           REDIS_URL: redis://localhost:6379
           GO_ENV: test
-        run: cd services/job && go test -v -race -coverprofile=coverage.out ./...
+        run: cd services/job && go test -v -race ./...
 
   test-user:
     name: Test / user
@@ -228,7 +228,7 @@ jobs:
           DATABASE_URL: postgres://conduit:conduit_test@localhost:5432/conduit_test?sslmode=disable
           REDIS_URL: redis://localhost:6379
           GO_ENV: test
-        run: cd services/user && go test -v -race -coverprofile=coverage.out ./...
+        run: cd services/user && go test -v -race ./...
 
   test-gateway:
     name: Test / gateway
@@ -267,7 +267,7 @@ jobs:
           DATABASE_URL: postgres://conduit:conduit_test@localhost:5432/conduit_test?sslmode=disable
           REDIS_URL: redis://localhost:6379
           GO_ENV: test
-        run: cd services/gateway && go test -v -race -coverprofile=coverage.out ./...
+        run: cd services/gateway && go test -v -race ./...
 
   build:
     name: Build / ${{ matrix.service }}
