@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS audit_logs CASCADE;
+DROP TABLE IF EXISTS line_messages CASCADE;
+DROP TYPE  IF EXISTS ai_status;
