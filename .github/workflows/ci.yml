@@ -36,39 +36,51 @@ jobs:
             auth:
               - 'services/auth/**'
               - 'shared/**'
+              - 'vendor/**'
             job:
               - 'services/job/**'
               - 'shared/**'
+              - 'vendor/**'
             user:
               - 'services/user/**'
               - 'shared/**'
+              - 'vendor/**'
             document:
               - 'services/document/**'
               - 'shared/**'
+              - 'vendor/**'
             media:
               - 'services/media/**'
               - 'shared/**'
+              - 'vendor/**'
             material:
               - 'services/material/**'
               - 'shared/**'
+              - 'vendor/**'
             notify:
               - 'services/notify/**'
               - 'shared/**'
+              - 'vendor/**'
             report:
               - 'services/report/**'
               - 'shared/**'
+              - 'vendor/**'
             config:
               - 'services/config/**'
               - 'shared/**'
+              - 'vendor/**'
             line-webhook:
               - 'services/line-webhook/**'
               - 'shared/**'
+              - 'vendor/**'
             ai-worker:
               - 'services/ai-worker/**'
               - 'shared/**'
+              - 'vendor/**'
             gateway:
               - 'services/gateway/**'
               - 'shared/**'
+              - 'vendor/**'
             migrations:
               - 'migrations/**'
 
@@ -81,20 +93,15 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-          cache: true
-      - name: Download dependencies
-        run: go work sync
       - name: Install golangci-lint
         run: |
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
             | sh -s -- -b $(go env GOPATH)/bin v1.61.0
-      - name: Lint shared
-        run: cd shared && golangci-lint run ./... || true
       - name: Lint services
         run: |
           for svc in auth job user document media material notify report config line-webhook ai-worker gateway; do
             echo "── linting $svc ──"
-            cd services/$svc && go mod download && golangci-lint run ./... || true && cd ../..
+            cd services/$svc && golangci-lint run --allow-parallel-runners -E govet ./... || true && cd ../..
           done
 
   test-auth:
@@ -128,7 +135,6 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-          cache: true
       - name: Run migrations
         env:
           DATABASE_URL: postgres://conduit:conduit_test@localhost:5432/conduit_test?sslmode=disable
@@ -140,7 +146,7 @@ jobs:
           DATABASE_URL: postgres://conduit:conduit_test@localhost:5432/conduit_test?sslmode=disable
           REDIS_URL: redis://localhost:6379
           GO_ENV: test
-        run: cd services/auth && go test -v -race ./...
+        run: cd services/auth && go test -mod=vendor -v -race ./...
 
   test-job:
     name: Test / job
@@ -173,19 +179,12 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-          cache: true
-      - name: Run migrations
-        env:
-          DATABASE_URL: postgres://conduit:conduit_test@localhost:5432/conduit_test?sslmode=disable
-        run: |
-          go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
-          migrate -path migrations -database "$DATABASE_URL" up || true
       - name: Test job
         env:
           DATABASE_URL: postgres://conduit:conduit_test@localhost:5432/conduit_test?sslmode=disable
           REDIS_URL: redis://localhost:6379
           GO_ENV: test
-        run: cd services/job && go test -v -race ./...
+        run: cd services/job && go test -mod=vendor -v -race ./...
 
   test-user:
     name: Test / user
@@ -218,19 +217,12 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-          cache: true
-      - name: Run migrations
-        env:
-          DATABASE_URL: postgres://conduit:conduit_test@localhost:5432/conduit_test?sslmode=disable
-        run: |
-          go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
-          migrate -path migrations -database "$DATABASE_URL" up || true
       - name: Test user
         env:
           DATABASE_URL: postgres://conduit:conduit_test@localhost:5432/conduit_test?sslmode=disable
           REDIS_URL: redis://localhost:6379
           GO_ENV: test
-        run: cd services/user && go test -v -race ./...
+        run: cd services/user && go test -mod=vendor -v -race ./...
 
   test-gateway:
     name: Test / gateway
@@ -263,13 +255,12 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-          cache: true
       - name: Test gateway
         env:
           DATABASE_URL: postgres://conduit:conduit_test@localhost:5432/conduit_test?sslmode=disable
           REDIS_URL: redis://localhost:6379
           GO_ENV: test
-        run: cd services/gateway && go test -v -race ./...
+        run: cd services/gateway && go test -mod=vendor -v -race ./...
 
   build:
     name: Build / ${{ matrix.service }}

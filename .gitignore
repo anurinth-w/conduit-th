@@ -3,7 +3,7 @@ bin/
 .env
 .env.*
 !.env.example
-vendor/
+# vendor/
 *.test
 coverage.out
 .idea/
