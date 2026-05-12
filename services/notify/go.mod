@@ -1,5 +1,5 @@
 module github.com/anurinth-w/conduit-th/services/notify
 
-go 1.23
+go 1.25
 
 replace github.com/anurinth-w/conduit-th/shared => ../../shared
