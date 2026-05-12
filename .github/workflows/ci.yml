@@ -82,6 +82,8 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
+      - name: Download dependencies
+        run: go work sync
       - name: Install golangci-lint
         run: |
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
@@ -92,7 +94,7 @@ jobs:
         run: |
           for svc in auth job user document media material notify report config line-webhook ai-worker gateway; do
             echo "── linting $svc ──"
-            cd services/$svc && golangci-lint run ./... || true && cd ../..
+            cd services/$svc && go mod download && golangci-lint run ./... || true && cd ../..
           done
 
   test-auth:
