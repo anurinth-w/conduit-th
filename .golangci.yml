@@ -1,0 +1,25 @@
+version: "2"
+
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - gofmt
+    - goimports
+    - bodyclose
+    - sqlclosecheck
+    - noctx
+    - exhaustive
+
+linters-settings:
+  goimports:
+    local-prefixes: github.com/anurinth-w/conduit-th
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters: [errcheck]

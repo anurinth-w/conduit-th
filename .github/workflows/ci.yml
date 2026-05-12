@@ -1,0 +1,254 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  GO_VERSION: "1.23"
+
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      auth:         ${{ steps.filter.outputs.auth }}
+      job:          ${{ steps.filter.outputs.job }}
+      user:         ${{ steps.filter.outputs.user }}
+      document:     ${{ steps.filter.outputs.document }}
+      media:        ${{ steps.filter.outputs.media }}
+      material:     ${{ steps.filter.outputs.material }}
+      notify:       ${{ steps.filter.outputs.notify }}
+      report:       ${{ steps.filter.outputs.report }}
+      config:       ${{ steps.filter.outputs.config }}
+      line-webhook: ${{ steps.filter.outputs.line-webhook }}
+      ai-worker:    ${{ steps.filter.outputs.ai-worker }}
+      gateway:      ${{ steps.filter.outputs.gateway }}
+      migrations:   ${{ steps.filter.outputs.migrations }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            auth:
+              - 'services/auth/**'
+              - 'shared/**'
+            job:
+              - 'services/job/**'
+              - 'shared/**'
+            user:
+              - 'services/user/**'
+              - 'shared/**'
+            document:
+              - 'services/document/**'
+              - 'shared/**'
+            media:
+              - 'services/media/**'
+              - 'shared/**'
+            material:
+              - 'services/material/**'
+              - 'shared/**'
+            notify:
+              - 'services/notify/**'
+              - 'shared/**'
+            report:
+              - 'services/report/**'
+              - 'shared/**'
+            config:
+              - 'services/config/**'
+              - 'shared/**'
+            line-webhook:
+              - 'services/line-webhook/**'
+              - 'shared/**'
+            ai-worker:
+              - 'services/ai-worker/**'
+              - 'shared/**'
+            gateway:
+              - 'services/gateway/**'
+              - 'shared/**'
+            migrations:
+              - 'migrations/**'
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    needs: changes
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+      - name: Install golangci-lint
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
+            | sh -s -- -b $(go env GOPATH)/bin v1.61.0
+      - name: Lint shared
+        run: cd shared && golangci-lint run ./...
+      - name: Lint services
+        run: |
+          for svc in auth job user document media material notify report config line-webhook ai-worker gateway; do
+            echo "── linting $svc ──"
+            cd services/$svc && golangci-lint run ./... && cd ../..
+          done
+
+  test:
+    name: Test / ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    needs: changes
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { service: auth,         changed: "${{ needs.changes.outputs.auth }}" }
+          - { service: job,          changed: "${{ needs.changes.outputs.job }}" }
+          - { service: user,         changed: "${{ needs.changes.outputs.user }}" }
+          - { service: document,     changed: "${{ needs.changes.outputs.document }}" }
+          - { service: media,        changed: "${{ needs.changes.outputs.media }}" }
+          - { service: material,     changed: "${{ needs.changes.outputs.material }}" }
+          - { service: notify,       changed: "${{ needs.changes.outputs.notify }}" }
+          - { service: report,       changed: "${{ needs.changes.outputs.report }}" }
+          - { service: config,       changed: "${{ needs.changes.outputs.config }}" }
+          - { service: line-webhook, changed: "${{ needs.changes.outputs.line-webhook }}" }
+          - { service: ai-worker,    changed: "${{ needs.changes.outputs.ai-worker }}" }
+          - { service: gateway,      changed: "${{ needs.changes.outputs.gateway }}" }
+    if: ${{ matrix.changed == 'true' }}
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: conduit
+          POSTGRES_PASSWORD: conduit_test
+          POSTGRES_DB: conduit_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+      - name: Run migrations
+        env:
+          DATABASE_URL: postgres://conduit:conduit_test@localhost:5432/conduit_test?sslmode=disable
+        run: |
+          go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+          migrate -path migrations -database "$DATABASE_URL" up
+      - name: Test ${{ matrix.service }}
+        env:
+          DATABASE_URL: postgres://conduit:conduit_test@localhost:5432/conduit_test?sslmode=disable
+          REDIS_URL: redis://localhost:6379
+          GO_ENV: test
+        run: |
+          cd services/${{ matrix.service }}
+          go test -v -race -coverprofile=coverage.out ./...
+          go tool cover -func=coverage.out
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.service }}
+          path: services/${{ matrix.service }}/coverage.out
+          retention-days: 7
+
+  build:
+    name: Build / ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - auth
+          - job
+          - user
+          - document
+          - media
+          - material
+          - notify
+          - report
+          - config
+          - line-webhook
+          - ai-worker
+          - gateway
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Set image tag
+        id: tag
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          BRANCH=$(echo ${{ github.ref_name }} | sed 's/\//-/g')
+          echo "tag=${BRANCH}-${SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "image=ghcr.io/${{ github.repository_owner }}/conduit-${{ matrix.service }}" >> $GITHUB_OUTPUT
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: services/${{ matrix.service }}/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.tag.outputs.image }}:${{ steps.tag.outputs.tag }}
+            ${{ steps.tag.outputs.image }}:latest
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+  migration-check:
+    name: Validate migrations
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.migrations == 'true'
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: conduit
+          POSTGRES_PASSWORD: conduit_test
+          POSTGRES_DB: conduit_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Install migrate
+        run: go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+      - name: Migrate up
+        env:
+          DATABASE_URL: postgres://conduit:conduit_test@localhost:5432/conduit_test?sslmode=disable
+        run: migrate -path migrations -database "$DATABASE_URL" up
+      - name: Migrate down
+        env:
+          DATABASE_URL: postgres://conduit:conduit_test@localhost:5432/conduit_test?sslmode=disable
+        run: migrate -path migrations -database "$DATABASE_URL" down -all
+      - name: Migrate up again
+        env:
+          DATABASE_URL: postgres://conduit:conduit_test@localhost:5432/conduit_test?sslmode=disable
+        run: migrate -path migrations -database "$DATABASE_URL" up

@@ -1,0 +1,17 @@
+go 1.23
+
+use (
+  ./services/auth
+  ./services/job
+  ./services/user
+  ./services/document
+  ./services/media
+  ./services/material
+  ./services/notify
+  ./services/report
+  ./services/config
+  ./services/line-webhook
+  ./services/ai-worker
+  ./services/gateway
+  ./shared
+)
