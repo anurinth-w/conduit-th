@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS refresh_tokens;
+DROP TABLE IF EXISTS user_company_memberships;
+DROP TYPE  IF EXISTS user_role;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS companies;
+DROP EXTENSION IF EXISTS pg_trgm;
+DROP EXTENSION IF EXISTS "uuid-ossp";
