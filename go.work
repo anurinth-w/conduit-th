@@ -1,17 +1,17 @@
 go 1.23
 
 use (
-  ./services/auth
-  ./services/job
-  ./services/user
-  ./services/document
-  ./services/media
-  ./services/material
-  ./services/notify
-  ./services/report
-  ./services/config
-  ./services/line-webhook
-  ./services/ai-worker
-  ./services/gateway
-  ./shared
+	./services/ai-worker
+	./services/auth
+	./services/config
+	./services/document
+	./services/gateway
+	./services/job
+	./services/line-webhook
+	./services/material
+	./services/media
+	./services/notify
+	./services/report
+	./services/user
+	./shared
 )
