@@ -1,6 +1,7 @@
 package handler
 
 import (
+"errors"
 "net/http"
 
 "github.com/anurinth-w/conduit-th/services/job/service"
@@ -17,20 +18,20 @@ return &JobHandler{svc: svc}
 }
 
 type createJobRequest struct {
-CompanyID          string  `json:"company_id"          binding:"required"`
-JobType            string  `json:"job_type"            binding:"required"`
-JobCodeFormat      string  `json:"job_code_format"     binding:"required"`
-RefCode            string  `json:"ref_code"`
-ReportNumber       string  `json:"report_number"`
-WaterUserCode      string  `json:"water_user_code"`
-Cause              string  `json:"cause"`
-LocationText       string  `json:"location_text"`
-Subdistrict        string  `json:"subdistrict"`
-District           string  `json:"district"`
-Province           string  `json:"province"`
-JobSource          string  `json:"job_source"`
-ContactTechnician  string  `json:"contact_technician"`
-ContactCoordinator string  `json:"contact_coordinator"`
+CompanyID          string `json:"company_id"          binding:"required"`
+JobType            string `json:"job_type"            binding:"required"`
+JobCodeFormat      string `json:"job_code_format"     binding:"required"`
+RefCode            string `json:"ref_code"`
+ReportNumber       string `json:"report_number"`
+WaterUserCode      string `json:"water_user_code"`
+Cause              string `json:"cause"`
+LocationText       string `json:"location_text"`
+Subdistrict        string `json:"subdistrict"`
+District           string `json:"district"`
+Province           string `json:"province"`
+JobSource          string `json:"job_source"`
+ContactTechnician  string `json:"contact_technician"`
+ContactCoordinator string `json:"contact_coordinator"`
 }
 
 type updateStatusRequest struct {
@@ -55,8 +56,11 @@ c.JSON(http.StatusBadRequest, gin.H{"error": "invalid company_id"})
 return
 }
 
-// ดึง user ID จาก context (set โดย auth middleware)
-createdBy := uuid.New() // placeholder — จะใช้จาก JWT ใน gateway
+createdBy, err := uuid.Parse(c.GetHeader("X-User-ID"))
+if err != nil {
+c.JSON(http.StatusUnauthorized, gin.H{"error": "missing or invalid X-User-ID header"})
+return
+}
 
 job, err := h.svc.Create(c.Request.Context(), service.CreateJobInput{
 CompanyID:          companyID,
@@ -76,10 +80,9 @@ ContactTechnician:  req.ContactTechnician,
 ContactCoordinator: req.ContactCoordinator,
 })
 if err != nil {
-switch err {
-case service.ErrNoFormat:
+if errors.Is(err, service.ErrNoFormat) {
 c.JSON(http.StatusBadRequest, gin.H{"error": "job code format not configured"})
-default:
+} else {
 c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 }
 return
@@ -97,10 +100,9 @@ return
 
 job, err := h.svc.GetByID(c.Request.Context(), id)
 if err != nil {
-switch err {
-case service.ErrJobNotFound:
+if errors.Is(err, service.ErrJobNotFound) {
 c.JSON(http.StatusNotFound, gin.H{"error": "job not found"})
-default:
+} else {
 c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 }
 return
@@ -142,12 +144,11 @@ return
 }
 
 if err := h.svc.UpdateStatus(c.Request.Context(), id, req.Status); err != nil {
-switch err {
-case service.ErrJobNotFound:
+if errors.Is(err, service.ErrJobNotFound) {
 c.JSON(http.StatusNotFound, gin.H{"error": "job not found"})
-case service.ErrInvalidTransition:
+} else if errors.Is(err, service.ErrInvalidTransition) {
 c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-default:
+} else {
 c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 }
 return
@@ -175,7 +176,11 @@ c.JSON(http.StatusBadRequest, gin.H{"error": "invalid technician_id"})
 return
 }
 
-assignedBy := uuid.New() // placeholder — จะใช้จาก JWT ใน gateway
+assignedBy, err := uuid.Parse(c.GetHeader("X-User-ID"))
+if err != nil {
+c.JSON(http.StatusUnauthorized, gin.H{"error": "missing or invalid X-User-ID header"})
+return
+}
 
 assignment, err := h.svc.Assign(c.Request.Context(), service.AssignJobInput{
 JobID:          id,

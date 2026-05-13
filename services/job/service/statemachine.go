@@ -1,10 +1,5 @@
 package service
 
-import "errors"
-
-var ErrInvalidTransition = errors.New("invalid status transition")
-
-// validTransitions กำหนดว่าจาก status ไหนไป status ไหนได้บ้าง
 var validTransitions = map[string][]string{
 "open":            {"assigned", "duplicate"},
 "assigned":        {"in_progress", "open"},

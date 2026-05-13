@@ -11,9 +11,10 @@ import (
 )
 
 var (
-ErrJobNotFound    = errors.New("job not found")
-ErrForbidden      = errors.New("forbidden")
-ErrNoFormat       = errors.New("job code format not configured for this job type")
+ErrJobNotFound       = errors.New("job not found")
+ErrForbidden         = errors.New("forbidden")
+ErrNoFormat          = errors.New("job code format not configured for this job type")
+ErrInvalidTransition = errors.New("invalid status transition")
 )
 
 type CreateJobInput struct {
@@ -130,7 +131,6 @@ if err != nil {
 return nil, err
 }
 
-// เปลี่ยน status เป็น assigned ถ้ายังเป็น open อยู่
 if job.Status == "open" {
 _ = s.repo.UpdateStatus(ctx, in.JobID, "assigned")
 }
