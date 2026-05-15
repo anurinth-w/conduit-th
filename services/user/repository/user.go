@@ -2,6 +2,7 @@ package repository
 
 import (
 "context"
+"encoding/json"
 "errors"
 
 "github.com/google/uuid"
@@ -21,6 +22,7 @@ type Membership struct {
 ID           uuid.UUID
 UserID       uuid.UUID
 CompanyID    uuid.UUID
+CompanyName  string
 Role         string
 JobTypeScope []string
 IsActive     bool
@@ -103,27 +105,32 @@ return err
 }
 
 func (r *UserRepository) GetMemberships(ctx context.Context, userID uuid.UUID) ([]Membership, error) {
-rows, err := r.db.Query(ctx,
-`SELECT id, user_id, company_id, role, job_type_scope, is_active
- FROM user_company_memberships
- WHERE user_id = $1`,
-userID,
-)
-if err != nil {
-return nil, err
-}
-defer rows.Close()
+    rows, err := r.db.Query(ctx,
+        `SELECT m.id, m.user_id, m.company_id, c.name, m.role, m.job_type_scope, m.is_active
+         FROM user_company_memberships m
+         JOIN companies c ON c.id = m.company_id
+         WHERE m.user_id = $1 AND m.is_active = true`,
+        userID,
+    )
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
 
-var memberships []Membership
-for rows.Next() {
-var m Membership
-var scope []byte
-if err := rows.Scan(&m.ID, &m.UserID, &m.CompanyID, &m.Role, &scope, &m.IsActive); err != nil {
-return nil, err
-}
-memberships = append(memberships, m)
-}
-return memberships, nil
+    var memberships []Membership
+    for rows.Next() {
+        var m Membership
+        var scope []byte
+        if err := rows.Scan(&m.ID, &m.UserID, &m.CompanyID, &m.CompanyName,
+                            &m.Role, &scope, &m.IsActive); err != nil {
+            return nil, err
+        }
+        if len(scope) > 0 {
+            _ = json.Unmarshal(scope, &m.JobTypeScope)
+        }
+        memberships = append(memberships, m)
+    }
+    return memberships, nil
 }
 
 func (r *UserRepository) AddMembership(ctx context.Context, userID, companyID uuid.UUID, role string, scope []string) (*Membership, error) {

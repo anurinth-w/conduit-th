@@ -1,0 +1,4 @@
+[ZoneTransfer]
+ZoneId=3
+ReferrerUrl=https://claude.ai/chat/1ecfdf40-955b-430b-88bb-2b80ed325cc1
+HostUrl=https://claude.ai/api/organizations/2fc1ae44-d420-47d0-8dea-d2db8bb0de5f/conversations/1ecfdf40-955b-430b-88bb-2b80ed325cc1/wiggle/download-file?path=%2Fmnt%2Fuser-data%2Foutputs%2Fphase2-dev-log.md

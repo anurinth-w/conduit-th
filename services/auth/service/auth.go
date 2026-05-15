@@ -25,6 +25,7 @@ type Claims struct {
 jwt.RegisteredClaims
 UserID string `json:"uid"`
 Email  string `json:"email"`
+Name   string `json:"name"`
 }
 
 type LoginResponse struct {
@@ -142,18 +143,18 @@ return claims, nil
 }
 
 func (s *AuthService) generateAccessToken(user *repository.User) (string, error) {
-claims := Claims{
-RegisteredClaims: jwt.RegisteredClaims{
-ExpiresAt: jwt.NewNumericDate(time.Now().Add(s.cfg.AccessTokenTTL)),
-IssuedAt:  jwt.NewNumericDate(time.Now()),
-Subject:   user.ID.String(),
-},
-UserID: user.ID.String(),
-Email:  user.Email,
-}
-
-token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-return token.SignedString([]byte(s.cfg.JWTSecret))
+    claims := Claims{
+        RegisteredClaims: jwt.RegisteredClaims{
+            ExpiresAt: jwt.NewNumericDate(time.Now().Add(s.cfg.AccessTokenTTL)),
+            IssuedAt:  jwt.NewNumericDate(time.Now()),
+            Subject:   user.ID.String(),
+        },
+        UserID: user.ID.String(),
+        Email:  user.Email,
+        Name:   user.Name,
+    }
+    token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+    return token.SignedString([]byte(s.cfg.JWTSecret))
 }
 
 func hashToken(token string) string {
