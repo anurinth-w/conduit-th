@@ -1,0 +1,10 @@
+DROP TABLE IF EXISTS worker_compensation_jobs;
+DROP TABLE IF EXISTS worker_compensations;
+DROP TABLE IF EXISTS job_payments;
+DROP TABLE IF EXISTS job_line_groups;
+DROP TABLE IF EXISTS line_groups;
+ALTER TABLE jobs DROP COLUMN IF EXISTS payment_status;
+DROP TYPE IF EXISTS compensation_type;
+DROP TYPE IF EXISTS payment_status;
+DROP TYPE IF EXISTS job_line_group_role;
+DROP TYPE IF EXISTS line_group_purpose;
