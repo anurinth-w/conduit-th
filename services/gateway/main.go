@@ -25,6 +25,7 @@ func main() {
 	r := gin.Default()
 
 	// Global middlewares
+	r.Use(middleware.CORS())
 	r.Use(middleware.RateLimit(cfg.RateLimitRPS, cfg.RateLimitBurst))
 
 	// Health check (ไม่ต้อง JWT)
@@ -74,9 +75,9 @@ func main() {
 		protected.GET("/materials/:id/price-history", proxy.Forward(cfg.MaterialURL))
 
 		// Media
-		protected.POST("/jobs/:job_id/photos", proxy.Forward(cfg.MediaURL))
-		protected.GET("/jobs/:job_id/photos", proxy.Forward(cfg.MediaURL))
-		protected.POST("/jobs/:job_id/photos/refresh-urls", proxy.Forward(cfg.MediaURL))
+		protected.POST("/jobs/:id/photos", proxy.Forward(cfg.MediaURL))
+		protected.GET("/jobs/:id/photos", proxy.Forward(cfg.MediaURL))
+		protected.POST("/jobs/:id/photos/refresh-urls", proxy.Forward(cfg.MediaURL))
 		protected.GET("/photos/:id/url", proxy.Forward(cfg.MediaURL))
 		protected.PATCH("/photos/:id/select", proxy.Forward(cfg.MediaURL))
 		protected.DELETE("/photos/:id", proxy.Forward(cfg.MediaURL))
@@ -86,8 +87,8 @@ func main() {
 		protected.GET("/companies/:company_id/templates", proxy.Forward(cfg.DocumentURL))
 		protected.GET("/templates/:id", proxy.Forward(cfg.DocumentURL))
 		protected.POST("/companies/:company_id/bundles", proxy.Forward(cfg.DocumentURL))
-		protected.POST("/jobs/:job_id/documents/generate", proxy.Forward(cfg.DocumentURL))
-		protected.GET("/jobs/:job_id/documents", proxy.Forward(cfg.DocumentURL))
+		protected.POST("/jobs/:id/documents/generate", proxy.Forward(cfg.DocumentURL))
+		protected.GET("/jobs/:id/documents", proxy.Forward(cfg.DocumentURL))
 
 		// Notify
 		protected.POST("/notify", proxy.Forward(cfg.NotifyURL))
