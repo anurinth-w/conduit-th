@@ -1,5 +1,4 @@
 name: conduit-local
-
 services:
   postgres:
     image: postgres:16-alpine
@@ -67,6 +66,22 @@ services:
         mc mb --ignore-existing local/conduit-temp;
         echo 'buckets ready';
       "
+
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    container_name: conduit-gotenberg
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    command:
+      - "gotenberg"
+      - "--chromium-disable-javascript=true"
+      - "--chromium-allow-list=file:///tmp/.*"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   adminer:
     image: adminer:latest
