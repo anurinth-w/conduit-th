@@ -9,6 +9,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { AssignPanel } from "@/components/jobs/AssignPanel";
 import { useState } from "react";
+import { ConfirmPanel } from "@/components/jobs/ConfirmPanel";
 
 
 
@@ -33,8 +34,9 @@ function Row({ label, value }: { label: string; value?: string | number | null }
 export default function JobDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [assignOpen, setAssignOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const { data: job, isLoading, isError } = useJob(id);
-
+  
   if (isLoading) {
     return (
       <div className="p-8 space-y-3">
@@ -103,8 +105,10 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
           <Button variant="outline">สร้าง PDF</Button>
         </Link>
         <Button onClick={() => setAssignOpen(true)}>มอบหมายงาน</Button>
+        <Button variant="outline" onClick={() => setConfirmOpen(true)}>ยืนยันงานเสร็จ</Button>
       </div>
       <AssignPanel jobId={id} open={assignOpen} onClose={() => setAssignOpen(false)} />
+      <ConfirmPanel jobId={id} open={confirmOpen} onClose={() => setConfirmOpen(false)} />
     </div>
   );
 }
