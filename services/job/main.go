@@ -32,6 +32,8 @@ log.Fatalf("ping db: %v", err)
 log.Println("database connected")
 
 jobRepo := repository.NewJobRepository(db)
+	matRepo := repository.NewMaterialRepository(db)
+	matHandler := handler.NewMaterialHandler(matRepo)
 jobSvc := service.NewJobService(jobRepo)
 jobHandler := handler.NewJobHandler(jobSvc)
 
@@ -50,6 +52,9 @@ v1.PATCH("/jobs/:id/status", jobHandler.UpdateStatus)
 v1.POST("/jobs/:id/assign", jobHandler.Assign)
 v1.GET("/jobs/:id/assignments", jobHandler.GetAssignments)
 v1.GET("/companies/:company_id/jobs", jobHandler.ListByCompany)
+		v1.POST("/jobs/:id/materials", matHandler.Add)
+		v1.GET("/jobs/:id/materials", matHandler.List)
+		v1.DELETE("/jobs/:id/materials/:material_id", matHandler.Delete)
 }
 
 srv := &http.Server{

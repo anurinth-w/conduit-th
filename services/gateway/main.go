@@ -63,6 +63,9 @@ func main() {
 		protected.PATCH("/jobs/:id/status", proxy.Forward(cfg.JobURL))
 		protected.POST("/jobs/:id/assign", proxy.Forward(cfg.JobURL))
 		protected.GET("/jobs/:id/assignments", proxy.Forward(cfg.JobURL))
+			protected.POST("/jobs/:id/materials", proxy.Forward(cfg.JobURL))
+			protected.GET("/jobs/:id/materials", proxy.Forward(cfg.JobURL))
+			protected.DELETE("/jobs/:id/materials/:material_id", proxy.Forward(cfg.JobURL))
 		protected.GET("/companies/:company_id/jobs", proxy.Forward(cfg.JobURL))
 
 		// Materials

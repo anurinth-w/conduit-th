@@ -64,3 +64,17 @@ export interface JobPhoto {
   Caption: string;
   UploadedAt: string;
 }
+
+export interface JobMaterial {
+  ID: string;
+  JobID: string;
+  MaterialID: string | null;
+  Code: string;
+  Name: string;
+  Unit: string;
+  Quantity: number;
+  UnitPrice: number;
+  LaborCost: number;
+  Total: number;
+  CreatedAt: string;
+}
