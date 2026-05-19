@@ -1,11 +1,16 @@
+import { Sidebar } from "@/components/layout/Sidebar";
+
 export default function OfficeLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-background">
-      {children}
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <main className="flex-1 overflow-auto">
+        {children}
+      </main>
     </div>
   );
 }
