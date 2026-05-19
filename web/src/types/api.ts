@@ -52,3 +52,15 @@ export interface Member {
   IsActive: boolean;
   Role: string;
 }
+
+export interface JobPhoto {
+  ID: string;
+  JobID: string;
+  UploadedBy: string;
+  S3Key: string;
+  URL: string;
+  Stage: string;
+  IsSelected: boolean;
+  Caption: string;
+  UploadedAt: string;
+}
