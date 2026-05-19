@@ -43,3 +43,12 @@ export interface Job {
   CreatedAt: string;
   UpdatedAt: string;
 }
+
+export interface Member {
+  ID: string;
+  Email: string;
+  Name: string;
+  Phone: string;
+  IsActive: boolean;
+  Role: string;
+}

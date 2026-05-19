@@ -16,6 +16,7 @@ Email    string
 Name     string
 Phone    string
 IsActive bool
+Role     string 
 }
 
 type Membership struct {
@@ -148,25 +149,25 @@ return m, err
 }
 
 func (r *UserRepository) ListByCompany(ctx context.Context, companyID uuid.UUID) ([]User, error) {
-rows, err := r.db.Query(ctx,
-`SELECT u.id, u.email, u.name, u.phone, u.is_active
- FROM users u
- JOIN user_company_memberships m ON m.user_id = u.id
- WHERE m.company_id = $1 AND m.is_active = true`,
-companyID,
-)
-if err != nil {
-return nil, err
-}
-defer rows.Close()
+    rows, err := r.db.Query(ctx,
+        `SELECT u.id, u.email, u.name, u.phone, u.is_active, m.role
+         FROM users u
+         JOIN user_company_memberships m ON m.user_id = u.id
+         WHERE m.company_id = $1 AND m.is_active = true`,
+        companyID,
+    )
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
 
-var users []User
-for rows.Next() {
-var u User
-if err := rows.Scan(&u.ID, &u.Email, &u.Name, &u.Phone, &u.IsActive); err != nil {
-return nil, err
-}
-users = append(users, u)
-}
-return users, nil
+    var users []User
+    for rows.Next() {
+        var u User
+        if err := rows.Scan(&u.ID, &u.Email, &u.Name, &u.Phone, &u.IsActive, &u.Role); err != nil {
+            return nil, err
+        }
+        users = append(users, u)
+    }
+    return users, nil
 }

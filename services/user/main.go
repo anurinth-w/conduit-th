@@ -42,17 +42,23 @@ gin.SetMode(gin.ReleaseMode)
 r := gin.Default()
 r.GET("/health", userHandler.Health)
 
-v1 := r.Group("/v1/users")
+v1 := r.Group("/v1")
 {
-v1.POST("", userHandler.Create)
-v1.GET("/:id", userHandler.GetByID)
-v1.PUT("/:id", userHandler.Update)
-v1.DELETE("/:id", userHandler.Deactivate)
-v1.GET("/:id/memberships", userHandler.GetMemberships)
-v1.POST("/memberships", userHandler.AddMembership)
+users := v1.Group("/users")
+{
+users.POST("", userHandler.Create)
+users.GET("/:id", userHandler.GetByID)
+users.PUT("/:id", userHandler.Update)
+users.DELETE("/:id", userHandler.Deactivate)
+users.GET("/:id/memberships", userHandler.GetMemberships)
+users.POST("/memberships", userHandler.AddMembership)
 }
 
-v1.GET("/company/:company_id", userHandler.ListByCompany)
+companies := v1.Group("/companies")
+{
+companies.GET("/:company_id/members", userHandler.ListByCompany)
+}
+}
 
 srv := &http.Server{
 Addr:    ":8002",

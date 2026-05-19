@@ -7,6 +7,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { AssignPanel } from "@/components/jobs/AssignPanel";
+import { useState } from "react";
+
+
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "รอดำเนินการ",
@@ -28,6 +32,7 @@ function Row({ label, value }: { label: string; value?: string | number | null }
 
 export default function JobDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const [assignOpen, setAssignOpen] = useState(false);
   const { data: job, isLoading, isError } = useJob(id);
 
   if (isLoading) {
@@ -87,7 +92,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
       </div>
 
       {/* Actions */}
-      <div className="flex gap-3">
+      <div className="flex gap-3 flex-wrap">
         <Link href={`/jobs/${id}/photos`}>
           <Button variant="outline">รูปถ่าย</Button>
         </Link>
@@ -97,7 +102,9 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
         <Link href={`/jobs/${id}/document`}>
           <Button variant="outline">สร้าง PDF</Button>
         </Link>
+        <Button onClick={() => setAssignOpen(true)}>มอบหมายงาน</Button>
       </div>
+      <AssignPanel jobId={id} open={assignOpen} onClose={() => setAssignOpen(false)} />
     </div>
   );
 }
