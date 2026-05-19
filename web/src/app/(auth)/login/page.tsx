@@ -28,6 +28,7 @@ export default function LoginPage() {
 
       localStorage.setItem("access_token", data.access_token);
       localStorage.setItem("refresh_token", data.refresh_token);
+      document.cookie = `access_token=${data.access_token}; path=/; max-age=900; SameSite=Lax`;
 
       setAuth(
         { uid: payload.uid, email: payload.email, name: payload.name },
